@@ -1,39 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Menu } from "lucide-react";
+import React, { useEffect, useState } from 'react'
+import { Menu } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+  Sheet,
+  SheetContent,
 
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Sidebar } from "@/components/sidebar";
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import Sidebar from '@/components/sidebar';
 
-export const MobileSidebar = ({
-  apiLimitCount = 0,
-  isPro = false
-}: {
-  apiLimitCount: number;
-  isPro: boolean;
-}) => {
-  const [isMounted, setIsMounted] = useState(false);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+const MobileSidebar = () => {
 
-  if (!isMounted) {
-    return null;
-  }
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+      setIsMounted(true);
+    }, []);
 
-  return (
-    <Sheet>
-      <SheetTrigger>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu />
-        </Button>
+    if (!isMounted) {
+      return null;
+    }
+    return (
+    <div className='bg-pink-600'>
+      <Sheet >
+        <SheetTrigger>
+      <Button variant="ghost" size="icon" className="md:hidden">
+        <Menu/>
+      </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0">
-        <Sidebar isPro={isPro} apiLimitCount={apiLimitCount} />
+      <SheetContent side="left" className='p-0'>
+        <Sidebar/>
       </SheetContent>
-    </Sheet>
-  );
-};
+      </Sheet>
+      </div>
+  )
+}
+
+export default MobileSidebar;
