@@ -1,41 +1,33 @@
 "use client";
 
 import * as z from "zod";
-
+import axios from "axios";
 import { MessageSquare } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import OpenAI from "openai";
-import axios from 'axios';
+import { ChatCompletionRequestMessage } from "openai";
 
-
+import { BotAvatar } from "@/components/bot-avatar";
 import { Heading } from "@/components/heading";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {Empty} from "@/components/ui/empty";
-import { Loader } from "@/components/loader";
-import { UserAvatar } from "@/components/user-avatar";
-import { BotAvatar } from "@/components/bot-avatar";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
+import { Loader } from "@/components/loader";
+import { UserAvatar } from "@/components/user-avatar";
+import { Empty } from "@/components/ui/empty";
+import { useProModal } from "@/hooks/use-pro-modal";
 
 import { formSchema } from "./constants";
 
-type ExtendedMessage = OpenAI.ChatCompletionMessage & { role: "user" | "assistant" | string };
-
-
-// Main component for the conversation page
 const ConversationPage = () => {
-  // Using useRouter for navigation actions
   const router = useRouter();
+  const proModal = useProModal();
+  const [messages, setMessages] = useState<ChatCompletionRequestMessage[]>([]);
 
-  // State for storing chat messages
-  const [messages, setMessages] = useState<ExtendedMessage[]>([]);
-
-
-  // Setting up the form with react-hook-form and zod for validation
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,41 +35,28 @@ const ConversationPage = () => {
     }
   });
 
-  // Checking if the form is currently being submitted
   const isLoading = form.formState.isSubmitting;
   
-  // Function to handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Creating a message object for the user's input
-      const userMessage = { role: "user", content: values.prompt };
-      // Adding the user message to the existing messages
+      const userMessage: ChatCompletionRequestMessage = { role: "user", content: values.prompt };
       const newMessages = [...messages, userMessage];
       
-      // Sending the updated message list to the server
       const response = await axios.post('/api/conversation', { messages: newMessages });
-
-      // Updating the state with both the user's message and the server's response
       setMessages((current) => [...current, userMessage, response.data]);
       
-      // Resetting the form after submission
       form.reset();
     } catch (error: any) {
-      // TODO: Open Pro Model
-
-       // Handling errors, showing a modal on 403 or a toast on other errors
-      console.log(error)
       if (error?.response?.status === 403) {
-
+        proModal.onOpen();
       } else {
-
+        toast.error("Something went wrong.");
       }
     } finally {
       router.refresh();
     }
   }
 
-  // Render function for the component
   return ( 
     <div>
       <Heading
@@ -126,7 +105,6 @@ const ConversationPage = () => {
             </form>
           </Form>
         </div>
-
         <div className="space-y-4 mt-4">
           {isLoading && (
             <div className="p-8 rounded-lg w-full flex items-center justify-center bg-muted">
@@ -139,17 +117,16 @@ const ConversationPage = () => {
           <div className="flex flex-col-reverse gap-y-4">
             {messages.map((message) => (
               <div 
-              key={message.content}
+                key={message.content} 
+                className={cn(
+                  "p-8 w-full flex items-start gap-x-8 rounded-lg",
+                  message.role === "user" ? "bg-white border border-black/10" : "bg-muted",
+                )}
               >
-                {message.role === "assistant" ? <BotAvatar /> : <UserAvatar />}
-                <div
-                  className="text-sm overflow-hidden leading-7"
-                  dangerouslySetInnerHTML={{
-                    __html: message.content
-                      ? message.content.replace(/\n/g, "<br />")
-                      : "",
-                  }}
-                />
+                {message.role === "user" ? <UserAvatar /> : <BotAvatar />}
+                <p className="text-sm">
+                  {message.content}
+                </p>
               </div>
             ))}
           </div>
