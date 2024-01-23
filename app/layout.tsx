@@ -9,7 +9,7 @@ import './globals.css'
 const font = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Genius',
+  title: 'AI-SaaS',
   description: 'AI Platform',
 }
 
